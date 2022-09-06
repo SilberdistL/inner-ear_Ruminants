@@ -1,0 +1,821 @@
+---
+title: "R Notebook"
+#this code performs different smoothing of the curves created with the function fit_t_env (package RPANDA, Clavel et al.2017) e.g the degree of freedom to use for defining the spline
+---
+```{r}
+setwd("~/Desktop/ruminants_03_2022/RPANDA") 
+
+library(RPANDA)
+library(rgl) #call packages
+library(geomorph)
+library(dplyr)
+library(Morpho)
+library(stats)
+library(RColorBrewer)
+
+#import phylogenetic tree
+tree <- read.tree("tree_191.tre")
+tree$tip.label <- gsub("'","",tree$tip.label)
+data(InfTemp)#palaeotemperature data from Cenozoic based on 18O measurements
+
+#Import data
+Sa <- read.csv("F_evorates_pca.csv", sep=";", header=F, row.names=1)
+
+
+#Split dataset into categories : A = antilocapridae, B= Bovidae, C= Cervidae, D= dromomerycidae, M= Moschidae, G= Giraffidae, S= Stem Pecora, T= tragulidae, R= Stem Ruminantia
+X <- split(Sa, Sa$V3)
+str(X)
+
+A <- X$A$V2
+names(A) <- row.names(X$A)
+B<-X$B$V2
+names(B) <- row.names(X$B)
+C<- X$C$V2 
+names(C) <- row.names(X$C)
+D<- X$D$V2
+names(D) <- row.names(X$D)
+M<- X$M$V2
+names(M) <- row.names(X$M)
+G<- X$G$V2
+names(G) <- row.names(X$G)
+S<- X$S$V2
+names(S) <- row.names(X$S)
+T <- X$T$V2
+names(T) <- row.names(X$T)
+R <- X$R$V2
+names(R) <- row.names(X$R)
+
+#Tragulina VS Pecora groups
+RT <- c(R,T)
+Pec <- c(A,B,C,D,M,G,S)
+
+
+
+treA <- keep.tip(tree, names(A))
+treA <- multi2di(treA)
+
+treB <- keep.tip(tree, names(B))
+treB <- multi2di(treB)
+
+treC <- keep.tip(tree, names(C))
+treC <- multi2di(treC)
+
+treD <- keep.tip(tree, names(D))
+treD <- multi2di(treD)
+
+treM <- keep.tip(tree, names(M))
+treM <- multi2di(treM)
+
+treG <- keep.tip(tree, names(G))
+treG <- multi2di(treG)
+
+treS <- keep.tip(tree, names(S))
+treS <- multi2di(treS)
+
+treT <- keep.tip(tree, names(T))
+treT <- multi2di(treT)
+
+treRT <- keep.tip(tree, c(names(R), names(T)))
+treRT <- multi2di(treRT)
+
+trePec  <- drop.tip(tree, c(names(R), names(T)))
+trePec <- multi2di(trePec)
+```
+
+```{r}
+#When df=3
+
+resultPec3<-fit_t_env(trePec,Pec, env_data=InfTemp, df=3
+, scale=TRUE)
+
+resultRT3<-fit_t_env(treRT,RT, env_data=InfTemp, df=3
+, scale=TRUE)
+   
+resultA3<-fit_t_env(treA,A, env_data=InfTemp, df=3, scale=TRUE)
+
+resultB3<-fit_t_env(treB,B, env_data=InfTemp, df=3, scale=TRUE)
+
+resultC3<-fit_t_env(treC,C, env_data=InfTemp, df=3, scale=TRUE)
+
+resultM3<-fit_t_env(treM,M, env_data=InfTemp, df=3, scale=TRUE)
+
+resultG3<-fit_t_env(treG,G, env_data=InfTemp, df=3, scale=TRUE)
+
+pc3 <- rbind(resultPec3$aic,resultPec3$aicc,resultPec3$LH)
+row.names(pc3) <- c("aic3","aicc3","likelihood3")
+colnames(pc3) <- c("Pecora")
+
+rt3 <- rbind(resultRT3$aic,resultRT3$aicc,resultRT3$LH)
+row.names(rt3) <- c("aic3","aicc3","likelihood3")
+colnames(rt3) <- c("Tragulina")
+
+a3 <- rbind(resultA3$aic,resultA3$aicc,resultA3$LH)
+row.names(a3) <- c("aic3","aicc3","likelihood3")
+colnames(a3) <- c("Antilocapridae")
+
+b3<- rbind(resultB3$aic,resultB3$aicc,resultB3$LH)
+row.names(b3) <- c("aic3","aicc3","likelihood3")
+colnames(b3) <- c("Bovidae")
+
+c3 <- rbind(resultC3$aic,resultC3$aicc,resultC3$LH)
+row.names(c3) <- c("aic3","aicc3","likelihood3")
+colnames(c3) <- c("Cervidae")
+
+m3 <- rbind(resultM3$aic,resultM3$aicc,resultM3$LH)
+row.names(m3) <- c("aic3","aicc3","likelihood3")
+colnames(m3) <- c("Moschidae")
+
+g3 <- rbind(resultG3$aic,resultG3$aicc,resultG3$LH)
+row.names(g3) <- c("aic3","aicc3","likelihood3")
+colnames(g3) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=5
+
+resultPec5<-fit_t_env(trePec,Pec, env_data=InfTemp, df=5
+, scale=TRUE)
+
+resultRT5<-fit_t_env(treRT,RT, env_data=InfTemp, df=5
+, scale=TRUE)
+
+resultA5<-fit_t_env(treA,A, env_data=InfTemp, df=5, scale=TRUE)
+
+resultB5<-fit_t_env(treB,B, env_data=InfTemp, df=5, scale=TRUE)
+
+resultC5<-fit_t_env(treC,C, env_data=InfTemp, df=5, scale=TRUE)
+
+resultM5<-fit_t_env(treM,M, env_data=InfTemp, df=5, scale=TRUE)
+
+resultG5<-fit_t_env(treG,G, env_data=InfTemp, df=5, scale=TRUE)
+
+pc5 <- rbind(resultPec5$aic,resultPec5$aicc,resultPec5$LH)
+row.names(pc5) <- c("aic5","aicc5","likelihood5")
+colnames(pc5) <- c("Pecora")
+
+rt5 <- rbind(resultRT5$aic,resultRT5$aicc,resultRT5$LH)
+row.names(rt5) <- c("aic5","aicc5","likelihood5")
+colnames(rt5) <- c("Tragulina")
+
+a5 <- rbind(resultA5$aic,resultA5$aicc,resultA5$LH)
+row.names(a5) <- c("aic5","aicc5","likelihood5")
+colnames(a5) <- c("Antilocapridae")
+
+b5<- rbind(resultB5$aic,resultB5$aicc,resultB5$LH)
+row.names(b5) <- c("aic5","aicc5","likelihood5")
+colnames(b5) <- c("Bovidae")
+
+c5 <- rbind(resultC5$aic,resultC5$aicc,resultC5$LH)
+row.names(c5) <- c("aic5","aicc5","likelihood5")
+colnames(c5) <- c("Cervidae")
+
+m5 <- rbind(resultM5$aic,resultM5$aicc,resultM5$LH)
+row.names(m5) <- c("aic5","aicc5","likelihood5")
+colnames(m5) <- c("Moschidae")
+
+g5 <- rbind(resultG5$aic,resultG5$aicc,resultG5$LH)
+row.names(g5) <- c("aic5","aicc5","likelihood5")
+colnames(g5) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=10
+
+resultPec10<-fit_t_env(trePec,Pec, env_data=InfTemp, df=10
+, scale=TRUE)
+
+resultRT10<-fit_t_env(treRT,RT, env_data=InfTemp, df=10
+, scale=TRUE)
+   
+resultA10<-fit_t_env(treA,A, env_data=InfTemp, df=10, scale=TRUE)
+
+resultB10<-fit_t_env(treB,B, env_data=InfTemp, df=10, scale=TRUE)
+
+resultC10<-fit_t_env(treC,C, env_data=InfTemp, df=10, scale=TRUE)
+
+resultM10<-fit_t_env(treM,M, env_data=InfTemp, df=10, scale=TRUE)
+
+resultG10<-fit_t_env(treG,G, env_data=InfTemp, df=10, scale=TRUE)
+
+pc10 <- rbind(resultPec10$aic,resultPec10$aicc,resultPec10$LH)
+row.names(pc10) <- c("aic10","aicc10","likelihood10")
+colnames(pc10) <- c("Pecora")
+
+rt10 <- rbind(resultRT10$aic,resultRT10$aicc,resultRT10$LH)
+row.names(rt10) <- c("aic10","aicc10","likelihood10")
+colnames(rt10) <- c("Tragulina")
+
+a10 <- rbind(resultA10$aic,resultA10$aicc,resultA10$LH)
+row.names(a10) <- c("aic10","aicc10","likelihood10")
+colnames(a10) <- c("Antilocapridae")
+
+b10<- rbind(resultB10$aic,resultB10$aicc,resultB10$LH)
+row.names(b10) <- c("aic10","aicc10","likelihood10")
+colnames(b10) <- c("Bovidae")
+
+c10 <- rbind(resultC10$aic,resultC10$aicc,resultC10$LH)
+row.names(c10) <- c("aic10","aicc10","likelihood10")
+colnames(c10) <- c("Cervidae")
+
+m10 <- rbind(resultM10$aic,resultM10$aicc,resultM10$LH)
+row.names(m10) <- c("aic10","aicc10","likelihood10")
+colnames(m10) <- c("Moschidae")
+
+g10 <- rbind(resultG10$aic,resultG10$aicc,resultG10$LH)
+row.names(g10) <- c("aic10","aicc10","likelihood10")
+colnames(g10) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=20
+
+resultPec20<-fit_t_env(trePec,Pec, env_data=InfTemp, df=20
+, scale=TRUE)
+
+resultRT20<-fit_t_env(treRT,RT, env_data=InfTemp, df=20
+, scale=TRUE)
+   
+resultA20<-fit_t_env(treA,A, env_data=InfTemp, df=20, scale=TRUE)
+
+resultB20<-fit_t_env(treB,B, env_data=InfTemp, df=20, scale=TRUE)
+
+resultC20<-fit_t_env(treC,C, env_data=InfTemp, df=20, scale=TRUE)
+
+resultM20<-fit_t_env(treM,M, env_data=InfTemp, df=20, scale=TRUE)
+
+resultG20<-fit_t_env(treG,G, env_data=InfTemp, df=20, scale=TRUE)
+
+pc20 <- rbind(resultPec20$aic,resultPec20$aicc,resultPec20$LH)
+row.names(pc20) <- c("aic20","aicc20","likelihood20")
+colnames(pc20) <- c("Pecora")
+
+rt20 <- rbind(resultRT20$aic,resultRT20$aicc,resultRT20$LH)
+row.names(rt20) <- c("aic20","aicc20","likelihood20")
+colnames(rt20) <- c("Tragulina")
+
+a20 <- rbind(resultA20$aic,resultA20$aicc,resultA20$LH)
+row.names(a20) <- c("aic20","aicc20","likelihood20")
+colnames(a20) <- c("Antilocapridae")
+
+b20<- rbind(resultB20$aic,resultB20$aicc,resultB20$LH)
+row.names(b20) <- c("aic20","aicc20","likelihood20")
+colnames(b20) <- c("Bovidae")
+
+c20 <- rbind(resultC20$aic,resultC20$aicc,resultC20$LH)
+row.names(c20) <- c("aic20","aicc20","likelihood20")
+colnames(c20) <- c("Cervidae")
+
+m20 <- rbind(resultM20$aic,resultM20$aicc,resultM20$LH)
+row.names(m20) <- c("aic20","aicc20","likelihood20")
+colnames(m20) <- c("Moschidae")
+
+g20 <- rbind(resultG20$aic,resultG20$aicc,resultG20$LH)
+row.names(g20) <- c("aic20","aicc20","likelihood20")
+colnames(g20) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=30
+
+
+resultPec30<-fit_t_env(trePec,Pec, env_data=InfTemp, df=30
+, scale=TRUE)
+
+resultRT30<-fit_t_env(treRT,RT, env_data=InfTemp, df=30
+, scale=TRUE)
+   
+resultA30<-fit_t_env(treA,A, env_data=InfTemp, df=30, scale=TRUE)
+
+resultB30<-fit_t_env(treB,B, env_data=InfTemp, df=30, scale=TRUE)
+
+resultC30<-fit_t_env(treC,C, env_data=InfTemp, df=30, scale=TRUE)
+
+resultM30<-fit_t_env(treM,M, env_data=InfTemp, df=30, scale=TRUE)
+
+resultG30<-fit_t_env(treG,G, env_data=InfTemp, df=30, scale=TRUE)
+
+pc30 <- rbind(resultPec30$aic,resultPec30$aicc,resultPec30$LH)
+row.names(pc30) <- c("aic30","aicc30","likelihood30")
+colnames(pc30) <- c("Pecora")
+
+rt30 <- rbind(resultRT30$aic,resultRT30$aicc,resultRT30$LH)
+row.names(rt30) <- c("aic30","aicc30","likelihood30")
+colnames(rt30) <- c("Tragulina")
+
+a30 <- rbind(resultA30$aic,resultA30$aicc,resultA30$LH)
+row.names(a30) <- c("aic30","aicc30","likelihood30")
+colnames(a30) <- c("Antilocapridae")
+
+b30<- rbind(resultB30$aic,resultB30$aicc,resultB30$LH)
+row.names(b30) <- c("aic30","aicc30","likelihood30")
+colnames(b30) <- c("Bovidae")
+
+c30 <- rbind(resultC30$aic,resultC30$aicc,resultC30$LH)
+row.names(c30) <- c("aic30","aicc30","likelihood30")
+colnames(c30) <- c("Cervidae")
+
+m30 <- rbind(resultM30$aic,resultM30$aicc,resultM30$LH)
+row.names(m30) <- c("aic30","aicc30","likelihood30")
+colnames(m30) <- c("Moschidae")
+
+g30 <- rbind(resultG30$aic,resultG30$aicc,resultG30$LH)
+row.names(g30) <- c("aic30","aicc30","likelihood30")
+colnames(g30) <- c("Giraffidae")
+
+```
+
+```{r}
+#When df=50
+
+resultPec50<-fit_t_env(trePec,Pec, env_data=InfTemp, df=50
+, scale=TRUE)
+
+resultRT50<-fit_t_env(treRT,RT, env_data=InfTemp, df=50
+, scale=TRUE)
+   
+resultA50<-fit_t_env(treA,A, env_data=InfTemp, df=50, scale=TRUE)
+
+resultB50<-fit_t_env(treB,B, env_data=InfTemp, df=50, scale=TRUE)
+
+resultC50<-fit_t_env(treC,C, env_data=InfTemp, df=50, scale=TRUE)
+
+resultM50<-fit_t_env(treM,M, env_data=InfTemp, df=50, scale=TRUE)
+
+resultG50<-fit_t_env(treG,G, env_data=InfTemp, df=50, scale=TRUE)
+
+pc50 <- rbind(resultPec50$aic,resultPec50$aicc,resultPec50$LH)
+row.names(pc50) <- c("aic50","aicc50","likelihood50")
+colnames(pc50) <- c("Pecora")
+
+rt50 <- rbind(resultRT50$aic,resultRT50$aicc,resultRT50$LH)
+row.names(rt50) <- c("aic50","aicc50","likelihood50")
+colnames(rt50) <- c("Tragulina")
+
+a50 <- rbind(resultA50$aic,resultA50$aicc,resultA50$LH)
+row.names(a50) <- c("aic50","aicc50","likelihood50")
+colnames(a50) <- c("Antilocapridae")
+
+b50<- rbind(resultB50$aic,resultB50$aicc,resultB50$LH)
+row.names(b50) <- c("aic50","aicc50","likelihood50")
+colnames(b50) <- c("Bovidae")
+
+c50 <- rbind(resultC50$aic,resultC50$aicc,resultC50$LH)
+row.names(c50) <- c("aic50","aicc50","likelihood50")
+colnames(c50) <- c("Cervidae")
+
+m50 <- rbind(resultM50$aic,resultM50$aicc,resultM50$LH)
+row.names(m50) <- c("aic50","aicc50","likelihood50")
+colnames(m50) <- c("Moschidae")
+
+g50 <- rbind(resultG50$aic,resultG50$aicc,resultG50$LH)
+row.names(g50) <- c("aic50","aicc50","likelihood50")
+colnames(g50) <- c("Giraffidae")
+
+```
+
+
+```{r}
+sig3 <- cbind(pc3, rt3, a3,b3,c3,m3,g3)
+sig5 <- cbind(pc5, rt5, a5,b5,c5,m5,g5)
+sig10 <- cbind(pc10, rt10, a10,b10,c10,m10,g10)
+sig20 <- cbind(pc20, rt20, a20,b20,c20,m20,g20)
+sig30 <- cbind(pc30, rt30, a30,b30,c30,m30,g30)
+sig50 <- cbind(pc50, rt50, a50,b50,c50,m50,g50)
+
+sig_tot <- rbind(sig3, sig5, sig10, sig20, sig30, sig50)
+write.csv(sig_tot, "AIC_AICC_likelihood_PCA_per-family_per_df.csv")
+```
+
+```{r}
+#Export all the data in one table
+
+par <- rbind(resultPec3$param,resultRT3$param,resultA3$param,resultB3$param,resultC3$param,resultM3$param,resultG3$param,resultPec5$param,resultRT5$param,resultA5$param,resultB5$param,resultC5$param,resultM5$param,resultG5$param,resultPec10$param,resultRT10$param,resultA10$param,resultB10$param,resultC10$param,resultM10$param,resultG10$param,resultPec20$param,resultRT20$param,resultA20$param,resultB20$param,resultC20$param,resultM20$param,resultG20$param,resultPec30$param,resultRT30$param,resultA30$param,resultB30$param,resultC30$param,resultM30$param,resultG30$param,resultPec50$param,resultRT50$param,resultA50$param,resultB50$param,resultC50$param,resultM50$param,resultG50$param)
+
+rownames(par) <- c("Pecora3","Tragulina3", "Antilocapridae3", "Bovidae3", "Cervidae3", "Moschidae3", "Giraffidae3","Pecora5","Tragulina5", "Antilocapridae5", "Bovidae5", "Cervidae5", "Moschidae5", "Giraffidae5","Pecora10","Tragulina10", "Antilocapridae10", "Bovidae10", "Cervidae10", "Moschidae10", "Giraffidae10","Pecora20","Tragulina20", "Antilocapridae20", "Bovidae20", "Cervidae20", "Moschidae20", "Giraffidae20","Pecora30","Tragulina30", "Antilocapridae30", "Bovidae30", "Cervidae30", "Moschidae30", "Giraffidae30","Pecora50","Tragulina50", "Antilocapridae50", "Bovidae50", "Cervidae50", "Moschidae50", "Giraffidae50")
+
+colnames(par) <- c("sigma", "beta")
+write.csv(par, "parameters_sigma_beta_PCA_per-family_per-df.csv")
+
+```
+
+
+
+
+---
+title: "R Notebook"
+#this code performs different smoothing of the curves created with the function fit_t_env (package RPANDA, Clavel et al.2017) e.g the degree of freedom to use for defining the spline
+---
+
+```{r}
+setwd("~/Desktop/ruminants_03_2022/RPANDA") #set directory
+
+library(RPANDA)
+library(rgl) #call packages
+library(geomorph)
+library(dplyr)
+library(Morpho)
+library(stats)
+library(RColorBrewer)
+
+
+Sa <- read.csv("F_evorates_centroid.csv", sep=";", header=F, row.names=1)
+tree <- read.tree("tree_191.tre")
+tree$tip.label <- gsub("'","",tree$tip.label)
+data(InfTemp)#palaeotemperature data from Cenozoic based on 18O measurements
+
+
+#Split dataset into categories : A = antilocapridae, B= Bovidae, C= Cervidae, D= dromomerycidae, M= Moschidae, G= Giraffidae, S= Stem Pecora, T= tragulidae, R= Stem Ruminantia
+X <- split(Sa, Sa$V3)
+str(X)
+
+A <- X$A$V2
+names(A) <- row.names(X$A)
+B<-X$B$V2
+names(B) <- row.names(X$B)
+C<- X$C$V2 
+names(C) <- row.names(X$C)
+D<- X$D$V2
+names(D) <- row.names(X$D)
+M<- X$M$V2
+names(M) <- row.names(X$M)
+G<- X$G$V2
+names(G) <- row.names(X$G)
+S<- X$S$V2
+names(S) <- row.names(X$S)
+T <- X$T$V2
+names(T) <- row.names(X$T)
+R <- X$R$V2
+names(R) <- row.names(X$R)
+
+#Tragulina VS Pecora groups
+RT <- c(R,T)
+Pec <- c(A,B,C,D,M,G,S)
+
+
+
+treA <- keep.tip(tree, names(A))
+treA <- multi2di(treA)
+
+treB <- keep.tip(tree, names(B))
+treB <- multi2di(treB)
+
+treC <- keep.tip(tree, names(C))
+treC <- multi2di(treC)
+
+treD <- keep.tip(tree, names(D))
+treD <- multi2di(treD)
+
+treM <- keep.tip(tree, names(M))
+treM <- multi2di(treM)
+
+treG <- keep.tip(tree, names(G))
+treG <- multi2di(treG)
+
+treS <- keep.tip(tree, names(S))
+treS <- multi2di(treS)
+
+treT <- keep.tip(tree, names(T))
+treT <- multi2di(treT)
+
+treRT <- keep.tip(tree, c(names(R), names(T)))
+treRT <- multi2di(treRT)
+
+trePec  <- drop.tip(tree, c(names(R), names(T)))
+trePec <- multi2di(trePec)
+```
+
+```{r}
+#When df=3
+
+resultPec3<-fit_t_env(trePec,Pec, env_data=InfTemp, df=3
+, scale=TRUE)
+
+resultRT3<-fit_t_env(treRT,RT, env_data=InfTemp, df=3
+, scale=TRUE)
+   
+resultA3<-fit_t_env(treA,A, env_data=InfTemp, df=3, scale=TRUE)
+
+resultB3<-fit_t_env(treB,B, env_data=InfTemp, df=3, scale=TRUE)
+
+resultC3<-fit_t_env(treC,C, env_data=InfTemp, df=3, scale=TRUE)
+
+resultM3<-fit_t_env(treM,M, env_data=InfTemp, df=3, scale=TRUE)
+
+resultG3<-fit_t_env(treG,G, env_data=InfTemp, df=3, scale=TRUE)
+
+pc3 <- rbind(resultPec3$aic,resultPec3$aicc,resultPec3$LH)
+row.names(pc3) <- c("aic3","aicc3","likelihood3")
+colnames(pc3) <- c("Pecora")
+
+rt3 <- rbind(resultRT3$aic,resultRT3$aicc,resultRT3$LH)
+row.names(rt3) <- c("aic3","aicc3","likelihood3")
+colnames(rt3) <- c("Tragulina")
+
+a3 <- rbind(resultA3$aic,resultA3$aicc,resultA3$LH)
+row.names(a3) <- c("aic3","aicc3","likelihood3")
+colnames(a3) <- c("Antilocapridae")
+
+b3<- rbind(resultB3$aic,resultB3$aicc,resultB3$LH)
+row.names(b3) <- c("aic3","aicc3","likelihood3")
+colnames(b3) <- c("Bovidae")
+
+c3 <- rbind(resultC3$aic,resultC3$aicc,resultC3$LH)
+row.names(c3) <- c("aic3","aicc3","likelihood3")
+colnames(c3) <- c("Cervidae")
+
+m3 <- rbind(resultM3$aic,resultM3$aicc,resultM3$LH)
+row.names(m3) <- c("aic3","aicc3","likelihood3")
+colnames(m3) <- c("Moschidae")
+
+g3 <- rbind(resultG3$aic,resultG3$aicc,resultG3$LH)
+row.names(g3) <- c("aic3","aicc3","likelihood3")
+colnames(g3) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=5
+
+resultPec5<-fit_t_env(trePec,Pec, env_data=InfTemp, df=5
+, scale=TRUE)
+
+resultRT5<-fit_t_env(treRT,RT, env_data=InfTemp, df=5
+, scale=TRUE)
+
+resultA5<-fit_t_env(treA,A, env_data=InfTemp, df=5, scale=TRUE)
+
+resultB5<-fit_t_env(treB,B, env_data=InfTemp, df=5, scale=TRUE)
+
+resultC5<-fit_t_env(treC,C, env_data=InfTemp, df=5, scale=TRUE)
+
+resultM5<-fit_t_env(treM,M, env_data=InfTemp, df=5, scale=TRUE)
+
+resultG5<-fit_t_env(treG,G, env_data=InfTemp, df=5, scale=TRUE)
+
+pc5 <- rbind(resultPec5$aic,resultPec5$aicc,resultPec5$LH)
+row.names(pc5) <- c("aic5","aicc5","likelihood5")
+colnames(pc5) <- c("Pecora")
+
+rt5 <- rbind(resultRT5$aic,resultRT5$aicc,resultRT5$LH)
+row.names(rt5) <- c("aic5","aicc5","likelihood5")
+colnames(rt5) <- c("Tragulina")
+
+a5 <- rbind(resultA5$aic,resultA5$aicc,resultA5$LH)
+row.names(a5) <- c("aic5","aicc5","likelihood5")
+colnames(a5) <- c("Antilocapridae")
+
+b5<- rbind(resultB5$aic,resultB5$aicc,resultB5$LH)
+row.names(b5) <- c("aic5","aicc5","likelihood5")
+colnames(b5) <- c("Bovidae")
+
+c5 <- rbind(resultC5$aic,resultC5$aicc,resultC5$LH)
+row.names(c5) <- c("aic5","aicc5","likelihood5")
+colnames(c5) <- c("Cervidae")
+
+m5 <- rbind(resultM5$aic,resultM5$aicc,resultM5$LH)
+row.names(m5) <- c("aic5","aicc5","likelihood5")
+colnames(m5) <- c("Moschidae")
+
+g5 <- rbind(resultG5$aic,resultG5$aicc,resultG5$LH)
+row.names(g5) <- c("aic5","aicc5","likelihood5")
+colnames(g5) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=10
+
+resultPec10<-fit_t_env(trePec,Pec, env_data=InfTemp, df=10
+, scale=TRUE)
+
+resultRT10<-fit_t_env(treRT,RT, env_data=InfTemp, df=10
+, scale=TRUE)
+   
+resultA10<-fit_t_env(treA,A, env_data=InfTemp, df=10, scale=TRUE)
+
+resultB10<-fit_t_env(treB,B, env_data=InfTemp, df=10, scale=TRUE)
+
+resultC10<-fit_t_env(treC,C, env_data=InfTemp, df=10, scale=TRUE)
+
+resultM10<-fit_t_env(treM,M, env_data=InfTemp, df=10, scale=TRUE)
+
+resultG10<-fit_t_env(treG,G, env_data=InfTemp, df=10, scale=TRUE)
+
+pc10 <- rbind(resultPec10$aic,resultPec10$aicc,resultPec10$LH)
+row.names(pc10) <- c("aic10","aicc10","likelihood10")
+colnames(pc10) <- c("Pecora")
+
+rt10 <- rbind(resultRT10$aic,resultRT10$aicc,resultRT10$LH)
+row.names(rt10) <- c("aic10","aicc10","likelihood10")
+colnames(rt10) <- c("Tragulina")
+
+a10 <- rbind(resultA10$aic,resultA10$aicc,resultA10$LH)
+row.names(a10) <- c("aic10","aicc10","likelihood10")
+colnames(a10) <- c("Antilocapridae")
+
+b10<- rbind(resultB10$aic,resultB10$aicc,resultB10$LH)
+row.names(b10) <- c("aic10","aicc10","likelihood10")
+colnames(b10) <- c("Bovidae")
+
+c10 <- rbind(resultC10$aic,resultC10$aicc,resultC10$LH)
+row.names(c10) <- c("aic10","aicc10","likelihood10")
+colnames(c10) <- c("Cervidae")
+
+m10 <- rbind(resultM10$aic,resultM10$aicc,resultM10$LH)
+row.names(m10) <- c("aic10","aicc10","likelihood10")
+colnames(m10) <- c("Moschidae")
+
+g10 <- rbind(resultG10$aic,resultG10$aicc,resultG10$LH)
+row.names(g10) <- c("aic10","aicc10","likelihood10")
+colnames(g10) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=20
+
+resultPec20<-fit_t_env(trePec,Pec, env_data=InfTemp, df=20
+, scale=TRUE)
+
+resultRT20<-fit_t_env(treRT,RT, env_data=InfTemp, df=20
+, scale=TRUE)
+   
+resultA20<-fit_t_env(treA,A, env_data=InfTemp, df=20, scale=TRUE)
+
+resultB20<-fit_t_env(treB,B, env_data=InfTemp, df=20, scale=TRUE)
+
+resultC20<-fit_t_env(treC,C, env_data=InfTemp, df=20, scale=TRUE)
+
+resultM20<-fit_t_env(treM,M, env_data=InfTemp, df=20, scale=TRUE)
+
+resultG20<-fit_t_env(treG,G, env_data=InfTemp, df=20, scale=TRUE)
+
+pc20 <- rbind(resultPec20$aic,resultPec20$aicc,resultPec20$LH)
+row.names(pc20) <- c("aic20","aicc20","likelihood20")
+colnames(pc20) <- c("Pecora")
+
+rt20 <- rbind(resultRT20$aic,resultRT20$aicc,resultRT20$LH)
+row.names(rt20) <- c("aic20","aicc20","likelihood20")
+colnames(rt20) <- c("Tragulina")
+
+a20 <- rbind(resultA20$aic,resultA20$aicc,resultA20$LH)
+row.names(a20) <- c("aic20","aicc20","likelihood20")
+colnames(a20) <- c("Antilocapridae")
+
+b20<- rbind(resultB20$aic,resultB20$aicc,resultB20$LH)
+row.names(b20) <- c("aic20","aicc20","likelihood20")
+colnames(b20) <- c("Bovidae")
+
+c20 <- rbind(resultC20$aic,resultC20$aicc,resultC20$LH)
+row.names(c20) <- c("aic20","aicc20","likelihood20")
+colnames(c20) <- c("Cervidae")
+
+m20 <- rbind(resultM20$aic,resultM20$aicc,resultM20$LH)
+row.names(m20) <- c("aic20","aicc20","likelihood20")
+colnames(m20) <- c("Moschidae")
+
+g20 <- rbind(resultG20$aic,resultG20$aicc,resultG20$LH)
+row.names(g20) <- c("aic20","aicc20","likelihood20")
+colnames(g20) <- c("Giraffidae")
+
+```
+
+
+```{r}
+#When df=30
+
+
+resultPec30<-fit_t_env(trePec,Pec, env_data=InfTemp, df=30
+, scale=TRUE)
+
+resultRT30<-fit_t_env(treRT,RT, env_data=InfTemp, df=30
+, scale=TRUE)
+   
+resultA30<-fit_t_env(treA,A, env_data=InfTemp, df=30, scale=TRUE)
+
+resultB30<-fit_t_env(treB,B, env_data=InfTemp, df=30, scale=TRUE)
+
+resultC30<-fit_t_env(treC,C, env_data=InfTemp, df=30, scale=TRUE)
+
+resultM30<-fit_t_env(treM,M, env_data=InfTemp, df=30, scale=TRUE)
+
+resultG30<-fit_t_env(treG,G, env_data=InfTemp, df=30, scale=TRUE)
+
+pc30 <- rbind(resultPec30$aic,resultPec30$aicc,resultPec30$LH)
+row.names(pc30) <- c("aic30","aicc30","likelihood30")
+colnames(pc30) <- c("Pecora")
+
+rt30 <- rbind(resultRT30$aic,resultRT30$aicc,resultRT30$LH)
+row.names(rt30) <- c("aic30","aicc30","likelihood30")
+colnames(rt30) <- c("Tragulina")
+
+a30 <- rbind(resultA30$aic,resultA30$aicc,resultA30$LH)
+row.names(a30) <- c("aic30","aicc30","likelihood30")
+colnames(a30) <- c("Antilocapridae")
+
+b30<- rbind(resultB30$aic,resultB30$aicc,resultB30$LH)
+row.names(b30) <- c("aic30","aicc30","likelihood30")
+colnames(b30) <- c("Bovidae")
+
+c30 <- rbind(resultC30$aic,resultC30$aicc,resultC30$LH)
+row.names(c30) <- c("aic30","aicc30","likelihood30")
+colnames(c30) <- c("Cervidae")
+
+m30 <- rbind(resultM30$aic,resultM30$aicc,resultM30$LH)
+row.names(m30) <- c("aic30","aicc30","likelihood30")
+colnames(m30) <- c("Moschidae")
+
+g30 <- rbind(resultG30$aic,resultG30$aicc,resultG30$LH)
+row.names(g30) <- c("aic30","aicc30","likelihood30")
+colnames(g30) <- c("Giraffidae")
+
+```
+
+```{r}
+#When df=50
+
+resultPec50<-fit_t_env(trePec,Pec, env_data=InfTemp, df=50
+, scale=TRUE)
+
+resultRT50<-fit_t_env(treRT,RT, env_data=InfTemp, df=50
+, scale=TRUE)
+   
+resultA50<-fit_t_env(treA,A, env_data=InfTemp, df=50, scale=TRUE)
+
+resultB50<-fit_t_env(treB,B, env_data=InfTemp, df=50, scale=TRUE)
+
+resultC50<-fit_t_env(treC,C, env_data=InfTemp, df=50, scale=TRUE)
+
+resultM50<-fit_t_env(treM,M, env_data=InfTemp, df=50, scale=TRUE)
+
+resultG50<-fit_t_env(treG,G, env_data=InfTemp, df=50, scale=TRUE)
+
+pc50 <- rbind(resultPec50$aic,resultPec50$aicc,resultPec50$LH)
+row.names(pc50) <- c("aic50","aicc50","likelihood50")
+colnames(pc50) <- c("Pecora")
+
+rt50 <- rbind(resultRT50$aic,resultRT50$aicc,resultRT50$LH)
+row.names(rt50) <- c("aic50","aicc50","likelihood50")
+colnames(rt50) <- c("Tragulina")
+
+a50 <- rbind(resultA50$aic,resultA50$aicc,resultA50$LH)
+row.names(a50) <- c("aic50","aicc50","likelihood50")
+colnames(a50) <- c("Antilocapridae")
+
+b50<- rbind(resultB50$aic,resultB50$aicc,resultB50$LH)
+row.names(b50) <- c("aic50","aicc50","likelihood50")
+colnames(b50) <- c("Bovidae")
+
+c50 <- rbind(resultC50$aic,resultC50$aicc,resultC50$LH)
+row.names(c50) <- c("aic50","aicc50","likelihood50")
+colnames(c50) <- c("Cervidae")
+
+m50 <- rbind(resultM50$aic,resultM50$aicc,resultM50$LH)
+row.names(m50) <- c("aic50","aicc50","likelihood50")
+colnames(m50) <- c("Moschidae")
+
+g50 <- rbind(resultG50$aic,resultG50$aicc,resultG50$LH)
+row.names(g50) <- c("aic50","aicc50","likelihood50")
+colnames(g50) <- c("Giraffidae")
+
+```
+
+
+```{r}
+sig3 <- cbind(pc3, rt3, a3,b3,c3,m3,g3)
+sig5 <- cbind(pc5, rt5, a5,b5,c5,m5,g5)
+sig10 <- cbind(pc10, rt10, a10,b10,c10,m10,g10)
+sig20 <- cbind(pc20, rt20, a20,b20,c20,m20,g20)
+sig30 <- cbind(pc30, rt30, a30,b30,c30,m30,g30)
+sig50 <- cbind(pc50, rt50, a50,b50,c50,m50,g50)
+
+sig_tot <- rbind(sig3, sig5, sig10, sig20, sig30, sig50)
+write.csv(sig_tot, "AIC_AICC_likelihood_centroid_size_per-family_per_df.csv")
+```
+
+```{r}
+#Export all the data in one table
+
+par <- rbind(resultPec3$param,resultRT3$param,resultA3$param,resultB3$param,resultC3$param,resultM3$param,resultG3$param,resultPec5$param,resultRT5$param,resultA5$param,resultB5$param,resultC5$param,resultM5$param,resultG5$param,resultPec10$param,resultRT10$param,resultA10$param,resultB10$param,resultC10$param,resultM10$param,resultG10$param,resultPec20$param,resultRT20$param,resultA20$param,resultB20$param,resultC20$param,resultM20$param,resultG20$param,resultPec30$param,resultRT30$param,resultA30$param,resultB30$param,resultC30$param,resultM30$param,resultG30$param,resultPec50$param,resultRT50$param,resultA50$param,resultB50$param,resultC50$param,resultM50$param,resultG50$param)
+
+rownames(par) <- c("Pecora3","Tragulina3", "Antilocapridae3", "Bovidae3", "Cervidae3", "Moschidae3", "Giraffidae3","Pecora5","Tragulina5", "Antilocapridae5", "Bovidae5", "Cervidae5", "Moschidae5", "Giraffidae5","Pecora10","Tragulina10", "Antilocapridae10", "Bovidae10", "Cervidae10", "Moschidae10", "Giraffidae10","Pecora20","Tragulina20", "Antilocapridae20", "Bovidae20", "Cervidae20", "Moschidae20", "Giraffidae20","Pecora30","Tragulina30", "Antilocapridae30", "Bovidae30", "Cervidae30", "Moschidae30", "Giraffidae30","Pecora50","Tragulina50", "Antilocapridae50", "Bovidae50", "Cervidae50", "Moschidae50", "Giraffidae50")
+
+colnames(par) <- c("sigma", "beta")
+write.csv(par, "parameters_sigma_beta_centroid_size_per-family_per-df.csv")
+
+```
+
+
+
+

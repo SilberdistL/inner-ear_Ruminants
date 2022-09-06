@@ -1,0 +1,37 @@
+---
+  title: "R Notebook - resampling procedure - 306 specimens"
+output: html_notebook
+#the code is performing a resampling of the semilandmark curves on 3D shape data from inner ear of 306 specimens of ruminants, excinct and extant species. 
+---
+
+
+```{r}
+setwd("~/Desktop/bastien") #set directory
+
+library(rgl) #call packages
+library(geomorph)
+library(dplyr)
+library(Morpho)
+library(stats)
+library(RColorBrewer)
+
+data <-as.matrix(read.table("307_uptodate.csv", sep=",", header=TRUE)) 
+data <- data[,-1]
+speclist <- read.csv("speclist.csv", sep=";", header=FALSE)
+rum <- arrayspecs(data, 771,3)
+d <- as.data.frame( matrix( 1:(338*3*307), 338, 3))
+res <- array( unlist(d), dim=c(338, 3, 307) )
+
+for (i in 1:307)
+{
+  rum1 <- rum[,,i]
+  source("rum_code_landmarks") #resampling semilandmarks
+  res[,,i]<- bindArr(rumland,as.matrix(finish[,,1]),along =1)
+}
+
+res2d <- two.d.array(res)
+res2d <- res2d[-296,] 
+row.names(res2d) <- speclist[,1]
+
+write.csv(res2d, "ruminants_resampled_2d_array.csv") #file with final landmarks and semilandmarks 
+```

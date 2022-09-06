@@ -1,0 +1,1780 @@
+---
+title: "R Notebook - Statistical analyses Ruminants - PCA-CVA-BGPCA- 191 species"
+output: html_notebook
+##the code is performing Principal Component Analysis (PCA), Group-PCA and Canonical Variate Analysis (CVA) on 3D shape data from inner ear of 191 species of ruminants, excinct and extant species. the dataset is composed of 306 specimens and meanshapes were created for this purpose. 
+---
+
+
+```{r}
+setwd("~/Desktop/ruminants_03_2022/Data_306") #set directory
+
+library(rgl) #call packages
+library(geomorph)
+library(dplyr)
+library(Morpho)
+library(stats)
+library(RColorBrewer)
+
+
+ruminantia_all2d <- read.csv("ruminants_resampled_2d_array_0322.csv", sep=",") #import landmarks dataset with 306 species
+ruminantia_all2d <- ruminantia_all2d[,-1] 
+ruminantia_all <- arrayspecs(ruminantia_all2d, 338, 3) #reorgqnize dataset as 3D array 
+#curves 
+curves<-as.matrix(read.table(file = "curves_0322.csv", header = F, sep=";", skip = 0, fill = TRUE)) 
+#family file
+family <- read.table(file = "family_0322.csv", header = F, sep=";", skip = 0, fill = TRUE) #groups 
+family <- unlist(family, use.names=FALSE) #this step transform the dataset into "factors"
+#names
+speclist <- read.table(file = "speclist_0322.csv", header = F, sep=";", skip = 0, fill = TRUE) #names
+dimnames(ruminantia_all)[3] <- speclist	#name of the species are applied to the dataset
+
+data.rum <- list("land" = ruminantia_all, "curves"=curves, "family"=family, "species"=speclist) #list with all previous files
+str(data.rum) #check that everything is in order
+
+#######GPA and PCA########
+fix <- c(1, 16:17, 18:19, 20:21, 2:3, 4:5, 22:23, 24:25, 26:27, 28:29, 14:15, 10:11, 12:13, 6:7, 8:9, 30:31) #define fixed landmarks
+
+#define semilandmarks, each "outline" represents one semilandmark curve. 
+outline1 <- c(32:39)
+outline2 <- c(40:47)
+outline3 <- c(48:55)
+outline7 <- c(56:75)
+outline8 <- c(76:95)
+outline9 <- c(96:125)
+outline10 <- c(126:155)
+outline11 <- c(156:195)
+outline12 <- c(196:235)
+outline13 <- c(236:250)
+outline15 <- c(251:270)
+outline16 <- c(271:290)
+outline17 <- c(291:310)
+outline18 <- c(311:330)
+outline19 <- c(331:338)
+
+outlines <- list(outline1,outline2,outline3,outline7,outline8,outline9,outline10,outline11,outline12,outline13,outline15,outline16,outline17,outline18,outline19)
+surp <- c(32:338)
+R.gpa <- procSym(ruminantia_all, SMvector=surp, outlines=outlines, stepsize=0.2, iterations=10) #GPA and PCA 
+orpdata_exp <- two.d.array(R.gpa$orpdata) #PC scores
+dimnames(R.gpa$orpdata)[3] <- speclist
+
+spe_class <- read.csv("classifier_family_species_0322.csv", sep=";", header=FALSE)
+rum2d_sp <- cbind.data.frame(spe_class[,2], orpdata_exp)
+split_sp <- split(rum2d_sp, rum2d_sp[,1])
+row.names(rum2d_sp) <- speclist[,1]
+
+
+#this step creates a mean shape per species when several specimen were sampled
+for (i in 1:191)
+{
+	split_sp[[i]] <- split_sp[[i]][,2:1015]
+	df <- list(unique(spe_class[,2]))
+	assign(paste("sp",i, sep=""), as.matrix(split_sp[[i]]))
+	
+if (nrow(get(paste("sp",i, sep=""))) > 1) {
+	assign(paste("df",i, sep=""), arrayspecs(get(paste0("sp", i)), 338, 3))
+	assign(paste("df",i, sep=""), mshape(get(paste0("df", i))))
+}		
+
+else	{	
+	assign(paste("df",i, sep=""), matrix(get(paste0("sp", i)), ncol=1014))
+	assign(paste("df",i, sep=""), arrayspecs(get(paste0("df", i)), 338, 3))
+}		
+
+}
+
+#New dataset with one specimen per species
+rm_191 <- bindArr(df1,df2,df3,df4,df5,df6,df7,df8,df9,df10,df11,df12,df13,df14,df15,df16,df17,df18,df19,df20,df21,df22,df23,df24,df25,df26,df27,df28,df29,df30,df31,df32,df33,df34,df35,df36,df37,df38,df39,df40,df41,df42,df43,df44,df45,df46,df47,df48,df49,df50,df51,df52,df53,df54,df55,df56,df57,df58,df59,df60,df61,df62,df63,df64,df65,df66,df67,df68,df69,df70,df71,df72,df73,df74,df75,df76,df77,df78,df79,df80,df81,df82,df83,df84,df85,df86,df87,df88,df89,df90,df91,df92,df93,df94,df95,df96,df97,df98,df99,df100,df101,df102,df103,df104,df105,df106,df107,df108,df109,df110,df111,df112,df113,df114,df115,df116,df117,df118,df119,df120,df121,df122,df123,df124,df125,df126,df127,df128,df129,df130,df131,df132,df133,df134,df135,df136,df137,df138,df139,df140,df141,df142,df143,df144,df145,df146,df147,df148,df149,df150,df151,df152,df153,df154,df155,df156,df157,df158,df159,df160,df161,df162,df163,df164,df165,df166,df167,df168,df169,df170,df171,df172,df173,df174,df175,df176,df177,df178,df179,df180,df181,df182,df183,df184,df185,df186,df187,df188,df189,df190,df191, along=3)
+
+rm_names <- as.data.frame(ls(split_sp))
+dimnames(rm_191)[3] <- rm_names
+
+```
+
+```{r}
+
+ruminantia_all <- rm_191
+
+#family file
+setwd("~/Desktop/ruminants_03_2022/Data_191") 
+family <- read.table(file = "family_191_0322.csv", header = F, sep=";", skip = 0, fill = TRUE)
+family <- unlist(family, use.names=FALSE) #this step transform the dataset into "factors"
+curves<-as.matrix(read.table(file = "curves_0322.csv", header = F, sep=";", skip = 0, fill = TRUE)) #semilandmarks curves
+
+data.rum <- list("land" = ruminantia_all, "curves"=curves, "family"=family, "species"=rm_names)
+str(data.rum) #check that everything is in order
+
+#if any missing data: estimation of missing data using TPS or Reg methods
+#data.rum$land <-estimate.missing(data.rum$land, method = c("TPS","Reg"))
+
+#######GPA and PCA########
+fix <- c(1, 16:17, 18:19, 20:21, 2:3, 4:5, 22:23, 24:25, 26:27, 28:29, 14:15, 10:11, 12:13, 6:7, 8:9, 30:31)
+outline1 <- c(32:39)
+outline2 <- c(40:47)
+outline3 <- c(48:55)
+outline7 <- c(56:75)
+outline8 <- c(76:95)
+outline9 <- c(96:125)
+outline10 <- c(126:155)
+outline11 <- c(156:195)
+outline12 <- c(196:235)
+outline13 <- c(236:250)
+outline15 <- c(251:270)
+outline16 <- c(271:290)
+outline17 <- c(291:310)
+outline18 <- c(311:330)
+outline19 <- c(331:338)
+
+outlines <- list(outline1,outline2,outline3,outline7,outline8,outline9,outline10,outline11,outline12,outline13,outline15,outline16,outline17,outline18,outline19)
+surp <- c(32:338)
+
+R.gpa <- procSym(ruminantia_all, SMvector=surp, outlines=outlines, stepsize=0.2, iterations=10)
+
+orpdata_exp <- two.d.array(R.gpa$orpdata)
+dimnames(R.gpa$orpdata)[3] <- rm_names
+```
+
+```{r}
+
+#colors for graphs
+col.gp <- c("#A50026","#D73027","#ABD9E9","#F46D43","#74ADD1","#FEE090","#4575B4","#FFFFBF","#313695" )
+   names(col.gp) <- levels(as.factor(data.rum$family))
+col.gp <- col.gp[match(data.rum$family, names(col.gp))] # col.gp must not be a factor
+
+
+####LEGEND#####
+pdf('~/Desktop/ruminants_03_2022/Data_191/LEGEND_ALL_GRAPHS.pdf')
+col.gp1 <- c("#A50026","#D73027","#ABD9E9","#F46D43","#74ADD1","#FEE090","#4575B4","#FFFFBF","#313695" )
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+legend("topleft", legend = levels(as.factor(data.rum$family)), pch=c(21,21,21,21,21,21,21,23,24), bty='n', cex=1.3,
+    col = "black", pt.bg=col.gp1)
+mtext("Families", at=0.2, cex=1.5)
+dev.off()
+```
+
+```{r}
+pca.lands <- gm.prcomp(R.gpa$orpdata) #plot PCA and warpgrids
+  plot(pca.lands, pch = c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)], cex = 1.3, col = "black", bg=col.gp)
+#text(pca.lands[,1], pca.lands[,2],cex = 0.7, pos = 4, col = col.gp)
+
+pdf('~/Desktop/ruminants_03_2022/PCA_191/PCA_rum_numbers_191.pdf')
+  plot(pca.lands, pch = c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)], cex = 1.3, col = "black", bg=col.gp)
+  text(pca.lands$x[,1], pca.lands$x[,2],cex = 0.7, pos = 4, col = col.gp)
+dev.off()
+
+pdf('~/Desktop/ruminants_03_2022/PCA_191/PCA_rum_191.pdf')
+  plot(pca.lands, pch = c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)], cex = 1.3, col = "black", bg=col.gp)
+dev.off()
+
+write.csv(R.gpa$PCscores, "~/Desktop/ruminants_03_2022/PCA_191/PC_scores_rum_191.csv") 
+write.csv(orpdata_exp , "~/Desktop/ruminants_03_2022/PCA_191/gpa_191_data.csv")
+```
+
+```{r}
+############################################################
+#Extreme shapes comparison to mean shapes################3 #######################################################
+
+ref<-mshape(R.gpa$orpdata)
+
+#Min shapes in blue
+GP1 <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "steelblue",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "dodgerblue2",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Max shape in red
+GP2 <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "tomato2",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "firebrick",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+
+# Position 1: ventrolateral view 
+view_vl <- structure(c(0.0835975259542465, 0.811567366123199, 0.578247427940369, 
+0, 0.978820145130157, -0.175696313381195, 0.105080626904964, 
+0, 0.186876013875008, 0.557215452194214, -0.809066295623779, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_vl)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-vl.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-vl.pdf', fmt = 'pdf')
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-vl.pdf', fmt = 'pdf')
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-vl.pdf', fmt = 'pdf')
+
+
+
+# Position 2: rostral view
+view_ro <- structure(c(0.428554266691208, 0.88502025604248, 0.181881666183472, 
+0, 0.721136152744293, -0.213766485452652, -0.658989429473877, 
+0, -0.544339120388031, 0.413573890924454, -0.729830026626587, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_ro)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-ro.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-ro.pdf', fmt = 'pdf')
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-ro.pdf', fmt = 'pdf')
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-ro.pdf', fmt = 'pdf')
+
+# Position 3: medial view
+view_me <- structure(c(0.11674639582634, 0.874268472194672, -0.471195638179779, 
+0, -0.512964248657227, -0.35317724943161, -0.78238981962204, 
+0, -0.850433707237244, 0.333047688007355, 0.407236814498901, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_me)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-me.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-me.pdf', fmt = 'pdf')
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-me.pdf', fmt = 'pdf')
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-me.pdf', fmt = 'pdf')
+
+
+# Position 4: dorsolateral view
+view_dl <- structure(c(0.100966349244118, 0.913527607917786, -0.394047915935516, 
+0, -0.768031358718872, -0.180194079875946, -0.614538967609406, 
+0, -0.632403135299683, 0.364688515663147, 0.683424353599548, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_dl)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-dl.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-dl.pdf', fmt = 'pdf')
+
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-dl.pdf', fmt = 'pdf')
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-dl.pdf', fmt = 'pdf')
+
+# Position 5: occipital view
+view_oc <- structure(c(-0.358110010623932, 0.933626651763916, -0.00995611399412155, 
+0, -0.678099274635315, -0.252737879753113, 0.690149128437042, 
+0, 0.641825556755066, 0.253900289535522, 0.723598420619965, 0, 
+0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_oc)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-oc.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-oc.pdf', fmt = 'pdf')
+
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-oc.pdf', fmt = 'pdf')
+
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-oc.pdf', fmt = 'pdf')
+
+
+# Position 6: lateral view
+view_la <- structure(c(-0.142178624868393, 0.762186884880066, 0.631551325321198, 
+0, 0.671220660209656, -0.394690662622452, 0.627441763877869, 
+0, 0.727494359016418, 0.513118803501129, -0.455479294061661, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_la)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-la.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-la.pdf', fmt = 'pdf')
+
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-la.pdf', fmt = 'pdf')
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-la.pdf', fmt = 'pdf')
+
+# Position 7: dorsal view
+view_do <- structure(c(0.189859881997108, -0.490002751350403, 0.850794613361359, 
+0, 0.981808483600616, 0.0970052927732468, -0.163227245211601, 
+0, -0.00255055725574493, 0.866307139396667, 0.499505877494812, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_do)
+#PC1min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$min,method="points", links=curves, gridPars=GP1)
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1min-do.pdf', fmt = 'pdf')
+#PC1max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp1$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC1max-do.pdf', fmt = 'pdf')
+#PC2min
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$min,method="points", links=curves, gridPars=GP1) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2min-do.pdf', fmt = 'pdf')
+
+#PC2max
+plotRefToTarget(ref,pca.lands$shapes$shapes.comp2$max,method="points", links=curves, gridPars=GP2) 
+rgl.snapshot('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/PCA_191/Extreme_shapes_PCA/PC2max-do.pdf', fmt = 'pdf')
+
+
+#save the PC Data
+write.csv(pca.lands$pc.scores, file = "~/Desktop/ruminants_03_2022/PCA_191/PCScores_191_rum.csv")
+write.csv(pca.lands$pc.summary, file = "~/Desktop/ruminants_03_2022/PCA_191/standard_dev_PCA_191_rum.csv")
+
+```
+
+
+
+```{r}
+#####phylogenetic signal#######
+library("phytools")
+tree <- read.tree("tree_191.tre") #Import tree
+tree <- multi2di(tree)
+tree$tip.label <- gsub("'","",tree$tip.label)
+
+lambda <- phylosig(tree, R.gpa$PCscores, method="lambda", test=TRUE, nsim=10000, se=NULL, start=NULL, 
+	control=list())  #Pagel's lambda 
+K.bloom <- phylosig(tree, R.gpa$PCscores, method="K", test=FALSE, nsim=10000, se=NULL, start=NULL,
+	control=list()) #Bloomberg's K value
+
+write.table(cbind(lambda, K.bloom) , "~/Desktop/ruminants_03_2022/Data_191/physignal.csv") #Export data
+```
+
+
+```{r}
+########BG PCA#########################
+coords <- data.rum$land
+
+family <- data.rum$family #must be class = factor
+proc <- procSym(coords) #GPA
+
+gpca <- groupPCA(proc$orpdata, groups=family, rounds=10000, mc.cores=2) #between group PCA with families 
+
+
+#####Plot bgPCA########
+
+pdf('~/Desktop/ruminants_03_2022/bgPCA_191/bgPCA_191_ruminants.pdf')
+col.gp <- c("#A50026","#D73027","#ABD9E9","#F46D43","#74ADD1","#FEE090","#4575B4","#FFFFBF","#313695" )
+   names(col.gp) <- levels(as.factor(data.rum$family))
+col.gp <- col.gp[match(data.rum$family, names(col.gp))] # col.gp must not be a factor
+
+
+plot(gpca$Scores[,1], gpca$Scores[,2], 
+        pch = c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)], cex = 1.3, col = "black", bg=col.gp)
+
+
+dev.off() 
+
+
+pdf('~/Desktop/ruminants_03_2022/bgPCA_191/bgPCA_191_ruminants_numbers.pdf')
+
+
+col.gp <- c("#A50026","#D73027","#ABD9E9","#F46D43","#74ADD1","#FEE090","#4575B4","#FFFFBF","#313695" )
+   names(col.gp) <- levels(as.factor(data.rum$family))
+col.gp <- col.gp[match(data.rum$family, names(col.gp))] # col.gp must not be a factor
+
+plot(gpca$Scores[,1], gpca$Scores[,2], 
+        pch = c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)], cex = 1.3, col = "black", bg=col.gp)
+text(gpca$Scores[,1], gpca$Scores[,2],cex = 0.7, pos = 4, col = col.gp)
+
+dev.off()
+```
+
+
+```{r}
+
+#Export data bg-PCA
+
+write.csv(gpca$Variance, file="~/Desktop/ruminants_03_2022/bgPCA_191/variance_bg_PCA_191.csv") #Variation 
+write.csv(gpca$Scores, file="~/Desktop/ruminants_03_2022/bgPCA_191/bg_PCA_PCscores_191.csv") #PC Scores
+write.csv(gpca$CV, file="~/Desktop/ruminants_03_2022/bgPCA_191/cross_validated_scores_bg_PCA_191.csv") #cross validated scores
+write.csv(gpca$groupmeans, file= "~/Desktop/ruminants_03_2022/bgPCA_191/groupmeans_bg_PCA_191.csv") #mean shape per group
+write.csv(gpca$Grandmean, file= "~/Desktop/ruminants_03_2022/bgPCA_191/Grandmean_bg_PCA_191.csv") #mean for all PCs
+
+probs <- as.matrix(gpca$probs)
+write.csv(probs, file="~/Desktop/ruminants_03_2022/bgPCA_191/probs_bg_PCA_191.csv") #probs
+```
+
+
+```{r}
+#Extreme shapes per group comparison to mean shapes
+ref<-mshape(gpca$Grandmean)
+
+#Grandmean shape in grey
+AN <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#A50026",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "black",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Bovidae
+BO <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#D73027",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "black",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black", 
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Cervidae
+CE <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#ABD9E9",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Dromomerycidae
+DR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#F46D43",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Giraffidae
+GI <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#74ADD1",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+
+#Moschidae
+MO <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#FEE090",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Stem Pecora
+SP <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#4575B4",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Stem Ruminantia
+SR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#FFFFBF",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#tragulidae
+TR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#313695",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+
+
+# Position 1: ventrolateral view 
+view_vl <- structure(c(-0.35940283536911, -0.842918038368225, -0.400397956371307, 
+0, -0.916877448558807, 0.239110469818115, 0.319626241922379, 
+0, -0.173678979277611, 0.48199051618576, -0.858790040016174, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_vl)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-vl.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-vl.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-vl.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-vl.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-vl.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-vl.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-vl.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-vl.pdf', fmt = 'pdf')
+
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-vl.pdf', fmt = 'pdf')
+
+
+
+
+# Position 2: rostral view
+view_ro <- structure(c(-0.619816184043884, -0.773687601089478, -0.131283268332481, 
+0, -0.582192182540894, 0.341177016496658, 0.738003969192505, 
+0, -0.526193499565125, 0.533858835697174, -0.66190242767334, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_ro)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-ro.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-ro.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-ro.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-ro.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('Giraffidae-ro.png', fmt = 'png')
+rgl.postscript('Giraffidae-ro.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-ro.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-ro.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-ro.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-ro.pdf', fmt = 'pdf')
+
+#Position 3 : medial view
+view_me <- structure(c(-0.0573600828647614, -0.800420761108398, 0.596688449382782, 
+0, 0.782853603363037, 0.334840685129166, 0.524424910545349, 0, 
+-0.619556307792664, 0.497200280427933, 0.607405424118042, 0, 
+0, 0, 0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_me)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-me.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-me.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-me.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-me.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-me.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-me.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-me.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-me.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-me.pdf', fmt = 'pdf')
+
+#dorsolateral view
+
+view_dl <- structure(c(0.194247379899025, -0.766889810562134, 0.611676514148712, 
+0, 0.948090612888336, 0.306816190481186, 0.0835903137922287, 
+0, -0.251777291297913, 0.563687443733215, 0.786679208278656, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_dl)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-dl.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-dl.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-dl.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-dl.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-dl.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-dl.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-dl.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-dl.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-dl.pdf', fmt = 'pdf')
+
+
+#occipital view
+
+view_oc <- structure(c(0.500535845756531, -0.864058673381805, 0.0535375326871872, 
+0, 0.475845694541931, 0.222933441400528, -0.85080623626709, 0, 
+0.72321081161499, 0.451334714889526, 0.522745013237, 0, 0, 0, 
+0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_oc)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-oc.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-oc.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-oc.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-oc.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-oc.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-oc.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-oc.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-oc.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-oc.pdf', fmt = 'pdf')
+
+
+#latera view
+view_la <- structure(c(0.0843934565782547, -0.774407744407654, -0.627032697200775, 
+0, -0.785111665725708, 0.335813343524933, -0.520411193370819, 
+0, 0.61357718706131, 0.536210119724274, -0.579656183719635, 0, 
+0, 0, 0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_la)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-la.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-la.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-la.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-la.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-la.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-la.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-la.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-la.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-la.pdf', fmt = 'pdf')
+
+
+#dorsal view
+
+view_do <- structure(c(-0.396317660808563, 0.462727546691895, -0.792978882789612, 
+0, -0.832080662250519, -0.546068370342255, 0.0972124561667442, 
+0, -0.388037502765656, 0.698350012302399, 0.601443350315094, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+
+par3d(userMatrix = view_do)
+#Antilocapridae
+plotRefToTarget(ref,gpca$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Antilo-do.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Bovidae-do.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Cervidae-do.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Dromomerycidae-do.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Giraffidae-do.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Moschidae-do.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Pecora-do.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,gpca$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Stem_Ruminantia-do.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,gpca$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/bgPCA_191/extreme_shapes_bgPCA/Tragulidae-do.pdf', fmt = 'pdf')
+
+
+dev.off() 
+```
+
+
+
+```{r}
+################CVA########################
+cva.1=CVA(R.gpa$orpdata, groups=family, cv=F)
+rownames(cva.1$CVscores) <- speclist[,1]
+
+
+pdf('~/Desktop/ruminants_03_2022/CVA_191/CVA_191_ruminants_numbers.pdf')
+plot(cva.1$CVscores, col="black",bg=col.gp, pch=c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)],
+   xlab=paste("1st canonical axis", paste(round(cva.1$Var[1,2],1),"%")),
+   ylab=paste("2nd canonical axis", paste(round(cva.1$Var[2,2],1),"%")))
+#text(cva.1$CVscores, as.character(family), col=col.gp, cex=.7)
+dev.off()
+
+pdf('~/Desktop/ruminants_03_2022/CVA_191/CVA_191_ruminants.pdf')
+
+plot(cva.1$CVscores, col="black",bg=col.gp, pch=c(21,21,21,21,21,21,21,23,24)[as.factor(data.rum$family)],
+   xlab=paste("1st canonical axis", paste(round(cva.1$Var[1,2],1),"%")),
+   ylab=paste("2nd canonical axis", paste(round(cva.1$Var[2,2],1),"%")))
+#text(cva.1$CVscores, pos=4, col=col.gp, cex=.7)
+dev.off()
+
+
+row.names(cva.1$CVscores) <- dimnames(rm_191)[[3]]
+
+write.csv(cva.1$CVscores, "~/Desktop/ruminants_03_2022/CVA_191/CVA_191_scores_rum.csv")
+write.csv(cva.1$Var, file="~/Desktop/ruminants_03_2022/CVA_191/variance_191_CVA.csv") #Variation 
+write.csv(cva.1$CV, file="~/Desktop/ruminants_03_2022/CVA_191/cross_validated_scores_CVA_191.csv") #cross validated scores
+write.csv(cva.1$groupmeans, file= "~/Desktop/ruminants_03_2022/CVA_191/groupmeans_CVA_191.csv") #mean shape per group
+write.csv(cva.1$Grandm, file= "~/Desktop/ruminants_03_2022/CVA_191/Grandmean_CVA_191.csv")
+
+```
+
+
+
+```{r}
+######centroid size per species######
+
+setwd("~/Desktop/ruminants_03_2022/Data_306")
+
+spe_class <- read.csv("classifier_family_species_0322.csv", sep=";", header=FALSE)
+rum_cent <- cbind.data.frame(spe_class[,2], a) #centroid size data
+split_sp <- split(rum_cent, rum_cent[,1])
+#row.names(rum2d_sp) <- speclist[,1]
+
+
+for (i in 1:191)
+{
+	split_sp[[i]][,2] <- mean(split_sp[[i]][,2])
+	df <- list(unique(spe_class[,2]))
+	assign(paste("df",i, sep=""), as.matrix(split_sp[[i]]))
+
+}
+
+
+rm_cent_191 <- rbind(df1,df2,df3,df4,df5,df6,df7,df8,df9,df10,df11,df12,df13,df14,df15,df16,df17,df18,df19,df20,df21,df22,df23,df24,df25,df26,df27,df28,df29,df30,df31,df32,df33,df34,df35,df36,df37,df38,df39,df40,df41,df42,df43,df44,df45,df46,df47,df48,df49,df50,df51,df52,df53,df54,df55,df56,df57,df58,df59,df60,df61,df62,df63,df64,df65,df66,df67,df68,df69,df70,df71,df72,df73,df74,df75,df76,df77,df78,df79,df80,df81,df82,df83,df84,df85,df86,df87,df88,df89,df90,df91,df92,df93,df94,df95,df96,df97,df98,df99,df100,df101,df102,df103,df104,df105,df106,df107,df108,df109,df110,df111,df112,df113,df114,df115,df116,df117,df118,df119,df120,df121,df122,df123,df124,df125,df126,df127,df128,df129,df130,df131,df132,df133,df134,df135,df136,df137,df138,df139,df140,df141,df142,df143,df144,df145,df146,df147,df148,df149,df150,df151,df152,df153,df154,df155,df156,df157,df158,df159,df160,df161,df162,df163,df164,df165,df166,df167,df168,df169,df170,df171,df172,df173,df174,df175,df176,df177,df178,df179,df180,df181,df182,df183,df184,df185,df186,df187,df188,df189,df190,df191)
+rm_cent_191 <- unique(rm_cent_191)
+ct <- as.data.frame(rm_cent_191[,2])
+row.names(ct) <- rm_cent_191[,1]
+colnames(ct) <- NULL
+
+write.table(ct , "~/Desktop/ruminants_03_2022/Data_191/centroid_191_rum.csv", row.names=TRUE, col.names=FALSE)
+
+```
+
+```{r}
+#Extreme shapes per group comparison to mean shapes
+ref<-mshape(cva.1$Grandm)
+
+#Grandmean shape in grey
+AN <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#A50026",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "black",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Bovidae
+BO <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#D73027",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = "black",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black", 
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Cervidae
+CE <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#ABD9E9",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Dromomerycidae
+DR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#F46D43",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Giraffidae
+GI <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#74ADD1",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+
+#Moschidae
+MO <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#FEE090",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Stem Pecora
+SP <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#4575B4",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#Stem Ruminantia
+SR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#FFFFBF",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+#tragulidae
+TR <- gridPar(
+  pt.bg = "dimgrey",
+  pt.size = 0.2,
+  link.col = "darkgrey",
+  link.lwd = 2,
+  link.lty = 1,
+  out.col = "gray",
+  out.cex = 0.1,
+  tar.pt.bg = "black",
+  tar.pt.size = 0.2,
+  tar.link.col = "#313695",
+  tar.link.lwd = 2,
+  tar.link.lty = 1,
+  tar.out.col = " black ",
+  tar.out.cex = 0.1,
+  n.col.cell = 20,
+  grid.col = "black",
+  grid.lwd = 1,
+  grid.lty = 1,
+  txt.adj = 0.5,
+  txt.pos = 1,
+  txt.cex = 0.8,
+  txt.col = "black"
+)
+
+
+
+view_vl <- structure(c(0.0835975259542465, 0.811567366123199, 0.578247427940369, 
+0, 0.978820145130157, -0.175696313381195, 0.105080626904964, 
+0, 0.186876013875008, 0.557215452194214, -0.809066295623779, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_vl)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-vl.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-vl.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-vl.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-vl.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-vl.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-vl.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-vl.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-vl.pdf', fmt = 'pdf')
+
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-vl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-vl.pdf', fmt = 'pdf')
+
+
+
+
+# Position 2: rostral view
+view_ro <- structure(c(0.428554266691208, 0.88502025604248, 0.181881666183472, 
+0, 0.721136152744293, -0.213766485452652, -0.658989429473877, 
+0, -0.544339120388031, 0.413573890924454, -0.729830026626587, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_ro)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-ro.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-ro.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-ro.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-ro.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-ro.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-ro.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-ro.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-ro.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-ro.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-ro.pdf', fmt = 'pdf')
+
+#Position 3 : medial view
+view_me <- structure(c(0.11674639582634, 0.874268472194672, -0.471195638179779, 
+0, -0.512964248657227, -0.35317724943161, -0.78238981962204, 
+0, -0.850433707237244, 0.333047688007355, 0.407236814498901, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_me)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-me.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-me.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-me.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-me.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-me.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-me.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-me.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-me.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-me.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-me.pdf', fmt = 'pdf')
+
+#dorsolateral view
+
+view_dl <- structure(c(0.100966349244118, 0.913527607917786, -0.394047915935516, 
+0, -0.768031358718872, -0.180194079875946, -0.614538967609406, 
+0, -0.632403135299683, 0.364688515663147, 0.683424353599548, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_dl)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-dl.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-dl.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-dl.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-dl.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-dl.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-dl.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-dl.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-dl.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-dl.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-dl.pdf', fmt = 'pdf')
+
+
+#occipital view
+
+view_oc <- structure(c(-0.358110010623932, 0.933626651763916, -0.00995611399412155, 
+0, -0.678099274635315, -0.252737879753113, 0.690149128437042, 
+0, 0.641825556755066, 0.253900289535522, 0.723598420619965, 0, 
+0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_oc)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-oc.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-oc.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-oc.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-oc.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-oc.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-oc.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-oc.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-oc.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-oc.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-oc.pdf', fmt = 'pdf')
+
+
+#latera view
+view_la <- structure(c(-0.142178624868393, 0.762186884880066, 0.631551325321198, 
+0, 0.671220660209656, -0.394690662622452, 0.627441763877869, 
+0, 0.727494359016418, 0.513118803501129, -0.455479294061661, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_la)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-la.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-la.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-la.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-la.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-la.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-la.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-la.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-la.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-la.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-la.pdf', fmt = 'pdf')
+
+
+#dorsal view
+
+view_do <- structure(c(0.189859881997108, -0.490002751350403, 0.850794613361359, 
+0, 0.981808483600616, 0.0970052927732468, -0.163227245211601, 
+0, -0.00255055725574493, 0.866307139396667, 0.499505877494812, 
+0, 0, 0, 0, 1), .Dim = c(4L, 4L))
+
+par3d(userMatrix = view_do)
+#Antilocapridae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Antilocapridae"],method="points", links=curves, gridPars=AN)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Antilo-do.pdf', fmt = 'pdf')
+
+# Bovidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Bovidae"],method="points", links=curves, gridPars=BO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Bovidae-do.pdf', fmt = 'pdf')
+
+# Cervidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Cervidae"],method="points", links=curves, gridPars=CE)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Cervidae-do.pdf', fmt = 'pdf')
+
+# Dromomerycidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Dromomerycidae"],method="points", links=curves, gridPars=DR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Dromomerycidae-do.pdf', fmt = 'pdf')
+
+# Giraffidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Giraffidae"],method="points", links=curves, gridPars=GI)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Giraffidae-do.pdf', fmt = 'pdf')
+
+# Moschidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Moschidae"],method="points", links=curves, gridPars=MO)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Moschidae-do.pdf', fmt = 'pdf')
+
+# Stem Pecora
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Pecora"],method="points", links=curves, gridPars=SP)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Pecora-do.pdf', fmt = 'pdf')
+
+#Stem Ruminantia
+plotRefToTarget(ref,cva.1$groupmeans[,,"Stem Ruminantia"],method="points", links=curves, gridPars=SR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Stem_Ruminantia-do.pdf', fmt = 'pdf')
+#Tragulidae
+plotRefToTarget(ref,cva.1$groupmeans[,,"Tragulidae"],method="points", links=curves, gridPars=TR)
+rgl.snapshot('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-do.png', fmt = 'png')
+rgl.postscript('~/Desktop/ruminants_03_2022/CVA_191/extreme_shapes_CVA/Tragulidae-do.pdf', fmt = 'pdf')
+```
+
+
