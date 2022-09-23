@@ -1,0 +1,125 @@
+---
+title: "Ruminants dataset 191sp. RRPhylo"
+#this code exports evolutionary rates on different datasets (PCA, bgPCA, CVA and centroid size results). 
+---
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+setwd("~/Desktop/ruminants_03_2022/RRphylo") #set directory
+library(RRphylo)
+library(ape)
+library(phytools)
+
+
+#Import data
+tree <- read.tree("tree_191.tre") #import tree
+tree <- multi2di(tree, random=FALSE)
+tree$tip.label <- gsub("'","",tree$tip.label)
+
+#import results from PCA-CVA-bgPCA-centroid
+
+ct<-read.table("centroid_191_rum.csv", row.names=1)
+pca <- read.table("PC_scores_rum_191.csv", sep=",", row.names=1, header=TRUE)   
+
+```
+
+
+```{r}
+#####PCA#######
+pca <- pca[,1:57]
+RRpc <- RRphylo(tree,pca,cov=NULL,rootV=NULL,aces=NULL,x1=NULL,aces.x1=NULL,clus=0.5)
+shiftPC<-search.shift(RRpc,status.type="clade",node=NULL, nrep=10000,f=2, filename=setwd("~/Desktop/ruminants_03_2022/RRphylo"))
+
+#evolutionary rates
+y <- RRpc$rates
+x <- y[1:190,]  #ancestral state
+y2 <- y[191:381,]#specimens
+
+#without ancestral states
+obj<-contMap(tree,y2,lims=c(0, 0.05),plot=TRUE, fsize=0.3)
+
+#save plot
+pdf('~/Desktop/ruminants_03_2022/RRphylo/PCA/PCA_evorates_no_ancestral_states.pdf')
+plot(setMap(obj,invert=TRUE),type="fan", fsize=c(0.35), outline=F, lwd=3, offset=5)
+dev.off()
+
+pdf('~/Desktop/ruminants_03_2022/RRphylo/PCA/PCA_evorates_nodes.pdf')
+plot(setMap(obj,invert=TRUE),type="fan", fsize=c(0.35), outline=F, lwd=3, offset=5)
+nodelabels(adj = c(0.5, 0.5), frame = "none",
+           pch = NULL, thermo = NULL, pie = NULL, piecol = NULL,
+           col = "black", bg = NULL, horiz = FALSE,
+           width = 0.5, height = 0.5, cex=0.5)
+dev.off()
+
+```
+
+
+```{r}
+#####ON CENTROID SIZE#######
+cent <- unlist(ct)
+cent <- as.numeric(paste(cent))
+names(cent) <- rownames(ct)
+
+
+obj<-contMap(tree,cent,lims=c(60, 130),plot=TRUE, fsize=0.3)
+plot(setMap(obj,invert=TRUE), fsize=0.3)
+
+pdf('~/Desktop/ruminants_03_2022/RRphylo/centroid/centroid_size_phylo.pdf')
+plot(setMap(obj,invert=TRUE),type="fan", fsize=c(0.35), outline=F, lwd=3,offset=5)
+dev.off()
+
+RRct <- RRphylo(tree,cent,cov=NULL,rootV=NULL,aces=NULL,x1=NULL,aces.x1=NULL,clus=0.5)
+shiftCE <- search.shift(RRct,status.type="clade",node=NULL, nrep=10000,f=2, filename=setwd("~/Desktop/ruminants_03_2022/RRphylo"))
+
+
+
+#evolutionary rates
+y <- RRct$rates
+x <- y[1:190,]  #ancestral state
+y2 <- y[191:381,]#specimens
+
+
+#plot tree and evolutionary rates
+
+#without ancestral states
+obj<-contMap(tree,y2,lims=c(0,0.6),plot=TRUE, fsize=0.3)
+
+#save plot
+pdf('~/Desktop/ruminants_03_2022/RRphylo/centroid/CENTROID_evorates_no_ancestral_states.pdf')
+plot(setMap(obj,invert=TRUE),type="fan", fsize=c(0.35), outline=F, lwd=3, offset=5)
+dev.off()
+
+pdf('~/Desktop/ruminants_03_2022/RRphylo/centroid/CENTROID_evorates_nodes.pdf')
+plot(setMap(obj,invert=TRUE),type="fan", fsize=c(0.35), outline=F, lwd=3, offset=5)
+nodelabels(adj = c(0.5, 0.5), frame = "none",
+           pch = NULL, thermo = NULL, pie = NULL, piecol = NULL,
+           col = "black", bg = NULL, horiz = FALSE,
+           width = 0.5, height = 0.5, cex=0.5)
+dev.off()
+
+
+
+
+```
+
+
+```{r}
+
+##Export results as .csv######
+
+#evolutionary rates
+write.csv(RRpc$rates, "~/Desktop/ruminants_03_2022/RRphylo/PCA/evorates_pca.csv")
+write.csv(RRct$rates, "~/Desktop/ruminants_03_2022/RRphylo/centroid/evorates_centroid.csv")
+
+
+write.csv(shiftPC$single.clades, file="~/Desktop/ruminants_03_2022/RRphylo/PCA/PCA_SC_shift_191.csv") #Variation 
+write.csv(shiftCE$single.clades, file="~/Desktop/ruminants_03_2022/RRphylo/centroid/cent_SC_shift_191.csv") #Variation 
+
+
+write.csv(shiftPC$all.clades, file="~/Desktop/ruminants_03_2022/RRphylo/PCA/PCA_AC_shift_191.csv") #Variation 
+write.csv(shiftCE$all.clades, file="~/Desktop/ruminants_03_2022/RRphylo/centroid/cent_AC_shift_191.csv") #Variation 
+
+```
+
+
