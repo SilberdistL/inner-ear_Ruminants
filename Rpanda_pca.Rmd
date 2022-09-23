@@ -1,0 +1,218 @@
+---
+title: "RPANDA pca data"
+#this code fits model of trait evolution for which evolutionary rates depends on an environmental function, or more generally a time varying function using RPANDA package (Clavel et.al 2017) and the function fit_t_env. Evolutionary rates were exported using the package RRphylo on PCA data. 
+---
+
+
+```{r}
+setwd("~/Desktop/ruminants_03_2022/RPANDA") 
+
+library(RPANDA)
+library(rgl) #call packages
+library(geomorph)
+library(dplyr)
+library(Morpho)
+library(stats)
+library(RColorBrewer)
+
+#import phylogenetic tree
+tree <- read.tree("tree_191.tre")
+tree$tip.label <- gsub("'","",tree$tip.label)
+data(InfTemp)#palaeotemperature data from Cenozoic based on 18O measurements
+
+#Import data
+Sa <- read.csv("F_evorates_pca.csv", sep=";", header=F, row.names=1)
+
+
+#Split dataset into categories : A = antilocapridae, B= Bovidae, C= Cervidae, D= dromomerycidae, M= Moschidae, G= Giraffidae, S= Stem Pecora, T= tragulidae, R= Stem Ruminantia
+X <- split(Sa, Sa$V3)
+str(X)
+
+A <- X$A$V2
+names(A) <- row.names(X$A)
+B<-X$B$V2
+names(B) <- row.names(X$B)
+C<- X$C$V2 
+names(C) <- row.names(X$C)
+D<- X$D$V2
+names(D) <- row.names(X$D)
+M<- X$M$V2
+names(M) <- row.names(X$M)
+G<- X$G$V2
+names(G) <- row.names(X$G)
+S<- X$S$V2
+names(S) <- row.names(X$S)
+T <- X$T$V2
+names(T) <- row.names(X$T)
+R <- X$R$V2
+names(R) <- row.names(X$R)
+
+#Tragulina VS Pecora groups
+RT <- c(R,T)
+Pec <- c(A,B,C,D,M,G,S)
+
+
+
+treA <- keep.tip(tree, names(A))
+treA <- multi2di(treA)
+
+treB <- keep.tip(tree, names(B))
+treB <- multi2di(treB)
+
+treC <- keep.tip(tree, names(C))
+treC <- multi2di(treC)
+
+treD <- keep.tip(tree, names(D))
+treD <- multi2di(treD)
+
+treM <- keep.tip(tree, names(M))
+treM <- multi2di(treM)
+
+treG <- keep.tip(tree, names(G))
+treG <- multi2di(treG)
+
+treS <- keep.tip(tree, names(S))
+treS <- multi2di(treS)
+
+treT <- keep.tip(tree, names(T))
+treT <- multi2di(treT)
+
+treRT <- keep.tip(tree, c(names(R), names(T)))
+treRT <- multi2di(treRT)
+
+trePec  <- drop.tip(tree, c(names(R), names(T)))
+trePec <- multi2di(trePec)
+```
+
+
+```{r}
+#Tragulina VS Pecora
+#Plot model
+
+
+tree <- multi2di(tree)
+data(InfTemp)
+
+pdf('RPANDA_PCA_VS_temperature_Pecora-Tragulina.pdf')
+InfTemp[,1] <-InfTemp[,1]*(-1)
+plot(InfTemp, xlim=c(-45,0), col="snow3", xlab="", ylab="", xaxt = "n", yaxt = "n",pch= "°" )
+axis(side = 4)
+mtext("Temperature", side=4)
+
+
+
+data(InfTemp)
+    ## Fit the Environmental-exponential model
+      # Fit the environmental model
+par(new=TRUE)
+resultRT<-fit_t_env(treRT,RT, env_data=InfTemp, scale=TRUE)
+    plot(resultRT, col="#313695", xlim=c(-45,0), ylim=c(0,0.0001), lwd=2,lty = 6)
+   
+      resultPec<-fit_t_env(trePec,Pec, env_data=InfTemp, scale=TRUE)
+      lines(resultPec, col="#A50026",lwd=2,lty = 6)
+        axis(side = 2)
+
+dev.off()
+
+#Tragulina VS Pecora
+#Export results as .csv
+
+
+rt <- rbind(resultRT$aic,resultRT$aicc,resultRT$LH)
+row.names(rt) <- c("aic","aicc","likelihood")
+colnames(rt) <- c("Tragulina")
+
+pec <- rbind(resultPec$aic,resultPec$aicc,resultPec$LH)
+row.names(pec) <- c("aic","aicc","likelihood")
+colnames(pec) <- c("Pecora")
+
+write.csv(cbind(rt,pec), "AIC_results_PCA_Pecora_Tragulina.csv")
+```
+
+
+```{r}
+#Tragulina + all other families
+#Export Graph of model
+
+
+tree <- multi2di(tree)
+data(InfTemp)
+
+
+pdf('RPANDA_PCA_VS_temperature_Tragulina_Pecoran_families.pdf')
+InfTemp[,1] <-InfTemp[,1]*(-1)
+plot(InfTemp, xlim=c(-45,0), col="snow3", xlab="", ylab="", xaxt = "n", yaxt = "n",pch= "°" )
+axis(side = 4)
+mtext("Temperature", side=4)
+
+data(InfTemp)
+    ## Fit the Environmental-exponential model
+      # Fit the environmental model
+
+
+par(new=TRUE)
+resultRT<-fit_t_env(treRT,RT, env_data=InfTemp, scale=TRUE)
+    plot(resultRT, col="#313695", xlim=c(-45,0), ylim=c(0,0.0001), lwd=2,lty = 6)
+   
+    
+
+      resultA<-fit_t_env(treA,A, env_data=InfTemp, scale=TRUE)
+        resultA$tot_time <- 25
+      lines(resultA, col="#A50026",lwd=2,lty = 6,steps=10000)
+        axis(side = 2)
+
+     resultB<-fit_t_env(treB,B, env_data=InfTemp, scale=TRUE)
+       resultB$tot_time <- 21
+      lines(resultB, col="#D73027", lwd=2,lty = 6)
+
+
+     resultC<-fit_t_env(treC,C, env_data=InfTemp, scale=TRUE)
+       resultC$tot_time <- 22.5
+      lines(resultC, col="#ABD9E9", lwd=2,lty = 6)
+
+
+     resultD<-fit_t_env(treD,D, env_data=InfTemp, scale=TRUE)
+       resultD$tot_time <- 24.5
+     # lines(resultD, col="#F46D43", lwd=2,lty = 6)
+
+resultM<-fit_t_env(treM,M, env_data=InfTemp, scale=TRUE)
+  resultM$tot_time <- 21
+      lines(resultM, col="#FEE090", lwd=2,lty = 6)
+
+resultG<-fit_t_env(treG,G, env_data=InfTemp, scale=TRUE)
+  resultG$tot_time <- 24
+      lines(resultG, col="#74ADD1", lwd=2,lty = 6)
+
+dev.off()
+
+#Export results as .csv
+rt <- rbind(resultRT$aic,resultRT$aicc,resultRT$LH)
+row.names(rt) <- c("aic","aicc","likelihood")
+colnames(rt) <- c("Tragulina")
+
+a <- rbind(resultA$aic,resultA$aicc,resultA$LH)
+row.names(a) <- c("aic","aicc","likelihood")
+colnames(a) <- c("Antilocapridae")
+b <- rbind(resultB$aic,resultB$aicc,resultB$LH)
+row.names(b) <- c("aic","aicc","likelihood")
+colnames(b) <- c("Bovidae")
+c <- rbind(resultC$aic,resultC$aicc,resultC$LH)
+row.names(c) <- c("aic","aicc","likelihood")
+colnames(c) <- c("Cervidae")
+m <- rbind(resultM$aic,resultM$aicc,resultM$LH)
+row.names(m) <- c("aic","aicc","likelihood")
+colnames(m) <- c("Moschidae")
+g <- rbind(resultG$aic,resultG$aicc,resultG$LH)
+row.names(g) <- c("aic","aicc","likelihood")
+colnames(g) <- c("Giraffidae")
+
+sig <- cbind(rt, a,b,c,m,g)
+
+write.csv(sig, "AIC_results_pca_evorates_Tragulina_Pecoran_families.csv")
+```
+
+
+
+
+
+
